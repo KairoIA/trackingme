@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>TrackingMe 🏆</title>
 <link rel="apple-touch-icon" href="logo.svg">
 <link rel="icon" type="image/svg+xml" href="logo.svg">
@@ -18,58 +18,66 @@
     --light:#e8f5ee; --accent:#ff6b35; --yellow:#ffd166;
     --radius:18px; --shadow:0 4px 24px rgba(26,122,63,0.13);
   }
-  * { box-sizing:border-box; margin:0; padding:0; }
-  html { font-size:18px; }
-  body { font-family:'Nunito',sans-serif; background:var(--g5); color:var(--dark); min-height:100vh; overflow-x:hidden; }
+  * { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+  html,body { height:100%; overflow:hidden; }
+  body { font-family:'Nunito',sans-serif; background:var(--g5); color:var(--dark); display:flex; flex-direction:column; }
   h1,h2,h3 { font-family:'Fredoka One',cursive; }
 
   /* ── TOPBAR ── */
   .topbar {
     background:var(--g1); color:white;
-    padding:18px 22px 15px;
+    padding:16px 22px 14px;
     display:flex; align-items:center; justify-content:space-between;
-    position:sticky; top:0; z-index:100;
+    flex-shrink:0;
     box-shadow:0 2px 16px rgba(0,0,0,0.18);
+    z-index:100;
   }
   .topbar h1 { font-size:1.8rem; letter-spacing:.5px; }
   .year-btn {
     background:rgba(255,255,255,0.18); border:2px solid rgba(255,255,255,0.4);
-    color:white; font-family:'Fredoka One',cursive; font-size:1.15rem;
-    padding:8px 20px; border-radius:30px; cursor:pointer; transition:background .2s;
+    color:white; font-family:'Fredoka One',cursive; font-size:1.1rem;
+    padding:8px 18px; border-radius:30px; cursor:pointer; transition:background .2s;
   }
-  .year-btn:hover { background:rgba(255,255,255,0.3); }
 
   /* ── TABS ── */
   .tabs {
     display:flex; background:var(--white); border-bottom:2px solid var(--g3);
-    position:sticky; top:65px; z-index:99; overflow-x:auto;
+    flex-shrink:0; z-index:99;
   }
-  .tabs::-webkit-scrollbar { display:none; }
   .tab {
-    flex:1; min-width:80px; padding:13px 8px; text-align:center;
-    font-weight:800; font-size:.88rem; color:var(--gray);
+    flex:1; padding:12px 4px; text-align:center;
+    font-weight:800; font-size:.78rem; color:var(--gray);
     cursor:pointer; border-bottom:3px solid transparent; transition:all .2s; white-space:nowrap;
   }
   .tab.active { color:var(--g1); border-bottom-color:var(--g1); }
-  .tab .ti { font-size:1.3rem; display:block; margin-bottom:2px; }
+  .tab .ti { font-size:1.25rem; display:block; margin-bottom:2px; }
 
-  /* ── PAGES ── */
-  .page { display:none; padding:18px; max-width:600px; margin:0 auto; padding-bottom:100px; }
-  .page.active { display:block; }
+  /* ── SWIPE CONTAINER ── */
+  .swipe-container {
+    flex:1; display:flex; overflow:hidden; position:relative;
+  }
+  .pages-track {
+    display:flex; width:400%; height:100%;
+    transition:transform .35s cubic-bezier(.4,0,.2,1);
+    will-change:transform;
+  }
+  .page {
+    width:25%; height:100%; overflow-y:auto; overflow-x:hidden;
+    padding:18px 16px 100px;
+    flex-shrink:0;
+    -webkit-overflow-scrolling:touch;
+  }
 
   /* ── CARDS ── */
   .card { background:white; border-radius:var(--radius); padding:20px; margin-bottom:16px; box-shadow:var(--shadow); }
-  .card-title { font-size:1.15rem; color:var(--mid); margin-bottom:14px; display:flex; align-items:center; gap:8px; }
+  .card-title { font-size:1.15rem; color:var(--mid); margin-bottom:14px; display:flex; align-items:center; gap:8px; font-family:'Fredoka One',cursive; }
 
   /* ── ACTIVITY GRID ── */
   .activity-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:14px; }
   .act-card {
-    background:var(--g5); border-radius:16px; padding:16px;
-    border:2px solid transparent; transition:all .2s; position:relative;
-    min-height:160px;
+    background:var(--g5); border-radius:16px; padding:16px 14px;
+    border:2px solid transparent; position:relative; min-height:165px;
   }
-
-  /* streak badges in top-left corner */
   .act-streaks {
     position:absolute; top:10px; left:10px;
     display:flex; flex-direction:column; gap:3px;
@@ -77,48 +85,94 @@
   .streak-pill {
     display:inline-flex; align-items:center; gap:3px;
     font-size:.72rem; font-weight:900;
-    padding:2px 7px; border-radius:99px;
-    line-height:1.3;
+    padding:2px 7px; border-radius:99px; line-height:1.4;
   }
   .streak-pill.fire   { background:#fff3e0; color:#e65100; }
   .streak-pill.trophy { background:#fffde7; color:#f57f17; }
   .streak-pill.bomb   { background:#fce4ec; color:#c62828; }
-
-  .act-card .act-icon { font-size:2rem; margin-top:2px; display:block; text-align:right; }
-  .act-card .act-name { font-weight:800; font-size:.92rem; margin:6px 0 2px; color:var(--mid); }
+  .act-card .act-icon { font-size:2rem; display:block; text-align:right; }
+  .act-card .act-name { font-weight:800; font-size:.9rem; margin:6px 0 2px; color:var(--mid); }
   .act-card .act-count { font-family:'Fredoka One',cursive; font-size:1.9rem; color:var(--g1); line-height:1.1; }
-  .act-card .act-goal { font-size:.78rem; color:var(--gray); margin-bottom:6px; }
+  .act-card .act-goal { font-size:.76rem; color:var(--gray); margin-bottom:6px; }
   .act-card .act-bar-wrap { background:var(--g4); border-radius:99px; height:7px; overflow:hidden; }
   .act-card .act-bar { background:linear-gradient(90deg,var(--g1),var(--g2)); border-radius:99px; height:100%; transition:width .6s cubic-bezier(.34,1.56,.64,1); }
-  .act-card .act-pct-row {
-    display:flex; justify-content:space-between; align-items:center; margin-top:5px;
-  }
-  .act-card .act-pct-row span:first-child { font-size:.75rem; color:var(--gray); font-weight:700; }
+  .act-card .act-pct-row { display:flex; justify-content:space-between; align-items:center; margin-top:5px; }
+  .act-card .act-pct-row span:first-child { font-size:.73rem; color:var(--gray); font-weight:700; }
   .act-card .act-pct-row span:last-child  { font-size:.8rem; font-weight:900; color:var(--g1); }
 
-  /* ── FAB ── */
-  .log-fab {
-    position:fixed; bottom:26px; right:22px; background:var(--g1); color:white;
-    border:none; width:66px; height:66px; border-radius:50%; font-size:2rem;
-    cursor:pointer; box-shadow:0 6px 24px rgba(26,122,63,.45);
-    z-index:200; transition:transform .2s,box-shadow .2s;
-    display:flex; align-items:center; justify-content:center;
+  /* ── CALENDAR ── */
+  .cal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+  .cal-nav {
+    background:var(--g4); border:none; width:46px; height:46px; border-radius:50%;
+    font-size:1.2rem; cursor:pointer; display:flex; align-items:center; justify-content:center;
+    color:var(--g1); font-weight:900; flex-shrink:0;
   }
-  .log-fab:hover { transform:scale(1.1); }
+  .cal-nav:active { background:var(--g3); }
+  .cal-month-title { font-size:1.35rem; color:var(--g1); font-family:'Fredoka One',cursive; }
+
+  .cal-grid {
+    display:grid;
+    grid-template-columns:repeat(7,1fr);
+    gap:3px;
+    width:100%;
+  }
+  .cal-day-name {
+    text-align:center; font-size:.78rem; font-weight:800; color:var(--gray); padding:5px 0;
+  }
+  .cal-day {
+    aspect-ratio:1;
+    display:flex; flex-direction:column; align-items:center; justify-content:flex-start;
+    border-radius:10px; cursor:pointer;
+    padding:4px 2px 2px;
+    transition:background .15s;
+    overflow:hidden;
+    min-width:0;
+  }
+  .cal-day:active:not(.empty) { background:var(--g4); }
+  .cal-day.today { background:var(--g3); }
+  .cal-day.today .day-num { color:var(--g1); font-weight:900; }
+  .cal-day.has-data { background:var(--g2); }
+  .cal-day.has-data .day-num { color:white; }
+  .cal-day.empty { cursor:default; }
+  .cal-day .day-num { font-size:.82rem; font-weight:800; line-height:1.2; }
+  .cal-day .day-icons {
+    display:flex; flex-wrap:wrap; justify-content:center;
+    gap:0px; margin-top:1px;
+    font-size:.55rem; line-height:1.1;
+    max-width:100%;
+  }
+  .cal-day .day-wlbl {
+    font-size:.5rem; color:var(--accent); font-weight:800;
+    margin-top:1px; line-height:1; white-space:nowrap;
+  }
+  .cal-day.has-data .day-wlbl { color:var(--yellow); }
+
+  /* ── WEIGHT ── */
+  .weight-chart-wrap { overflow-x:auto; padding-bottom:8px; }
+  .weight-legend { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:14px; }
+  .wleg-item { display:flex; align-items:center; gap:6px; font-size:.8rem; font-weight:700; }
+  .wleg-dot { width:16px; height:5px; border-radius:99px; }
+
+  /* ── HISTORY ── */
+  .hist-row { display:flex; align-items:center; margin-bottom:12px; }
+  .hist-label { font-size:.88rem; font-weight:700; display:flex; align-items:center; gap:6px; min-width:100px; }
+  .hist-val { font-size:.85rem; font-weight:800; color:var(--mid); min-width:52px; text-align:right; display:flex; flex-direction:column; align-items:flex-end; gap:1px; }
+  .hist-bar-wrap { flex:1; height:8px; background:var(--g4); border-radius:99px; margin:0 10px; overflow:hidden; }
+  .hist-bar { height:100%; border-radius:99px; transition:width .5s; }
 
   /* ── MODAL ── */
   .modal-overlay {
-    display:none; position:fixed; inset:0; background:rgba(0,0,0,.4);
+    display:none; position:fixed; inset:0; background:rgba(0,0,0,.45);
     z-index:300; align-items:flex-end; justify-content:center;
   }
   .modal-overlay.open { display:flex; }
   .modal {
     background:white; border-radius:24px 24px 0 0;
-    padding:26px 22px 40px; width:100%; max-width:600px;
+    padding:26px 22px 44px; width:100%; max-width:600px;
     animation:slideUp .3s ease; max-height:92vh; overflow-y:auto; position:relative;
   }
   @keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
-  .modal-title { font-size:1.4rem; margin-bottom:4px; color:var(--g1); }
+  .modal-title { font-size:1.4rem; margin-bottom:4px; color:var(--g1); font-family:'Fredoka One',cursive; }
   .modal-date { font-size:.95rem; font-weight:700; color:var(--gray); margin-bottom:18px; }
   .activity-btn-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:20px; }
   .act-btn {
@@ -128,9 +182,9 @@
   }
   .act-btn .abi { font-size:1.6rem; display:block; margin-bottom:4px; }
   .act-btn.selected { border-color:var(--g1); background:var(--g3); color:var(--g1); }
-  .weight-row { display:flex; gap:12px; align-items:center; margin-bottom:18px; }
+  .weight-row { display:flex; gap:12px; align-items:center; margin-bottom:20px; }
   .weight-input {
-    flex:1; border:2px solid var(--g3); border-radius:12px; padding:12px 16px;
+    flex:1; border:2px solid var(--g3); border-radius:12px; padding:13px 16px;
     font-family:'Nunito',sans-serif; font-size:1.1rem; font-weight:700;
     color:var(--dark); outline:none;
   }
@@ -141,62 +195,24 @@
     border-radius:14px; padding:16px; font-family:'Fredoka One',cursive;
     font-size:1.3rem; cursor:pointer; transition:background .2s;
   }
-  .modal-save:hover { background:var(--mid); }
+  .modal-save:active { background:var(--mid); }
   .modal-close-btn {
     position:absolute; top:18px; right:20px; background:var(--light); border:none;
     width:36px; height:36px; border-radius:50%; font-size:1.2rem; cursor:pointer;
     display:flex; align-items:center; justify-content:center; color:var(--gray);
   }
 
-  /* ── CALENDAR ── */
-  .cal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
-  .cal-nav {
-    background:var(--g4); border:none; width:46px; height:46px; border-radius:50%;
-    font-size:1.2rem; cursor:pointer; display:flex; align-items:center; justify-content:center;
-    color:var(--g1); font-weight:900; transition:background .15s;
-  }
-  .cal-nav:hover { background:var(--g3); }
-  .cal-month-title { font-size:1.4rem; color:var(--g1); }
-  .cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:4px; }
-  .cal-day-name { text-align:center; font-size:.8rem; font-weight:800; color:var(--gray); padding:6px 0; }
-  .cal-day {
-    aspect-ratio:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
-    border-radius:12px; cursor:pointer; transition:background .15s;
-    position:relative; padding:3px; min-height:54px;
-  }
-  .cal-day:hover:not(.empty) { background:var(--g4); }
-  .cal-day.today { background:var(--g3); color:var(--g1); font-weight:900; }
-  .cal-day.has-data { background:var(--g2); color:white; }
-  .cal-day.empty { cursor:default; }
-  .cal-day .day-num { font-size:.9rem; font-weight:800; line-height:1; }
-  .cal-day .day-icons { display:flex; gap:1px; flex-wrap:wrap; justify-content:center; margin-top:2px; font-size:.7rem; line-height:1; max-width:100%; }
-  .cal-day .day-wlbl { font-size:.58rem; color:var(--accent); font-weight:800; margin-top:2px; line-height:1; }
-  .cal-day.has-data .day-wlbl { color:var(--yellow); }
-
-  /* ── WEIGHT ── */
-  .weight-chart-wrap { overflow-x:auto; padding-bottom:8px; }
-  .weight-legend { display:flex; gap:14px; flex-wrap:wrap; margin-bottom:14px; }
-  .wleg-item { display:flex; align-items:center; gap:6px; font-size:.8rem; font-weight:700; }
-  .wleg-dot { width:16px; height:5px; border-radius:99px; }
-
-  /* ── HISTORY ── */
-  .hist-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
-  .hist-label { font-size:.9rem; font-weight:700; display:flex; align-items:center; gap:6px; min-width:95px; }
-  .hist-val { font-size:.88rem; font-weight:800; color:var(--mid); min-width:52px; text-align:right; }
-  .hist-bar-wrap { flex:1; height:8px; background:var(--g4); border-radius:99px; margin:0 10px; overflow:hidden; }
-  .hist-bar { height:100%; border-radius:99px; transition:width .5s; }
-
-  /* ── MISC ── */
-  .swipe-nav { display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:12px; }
-  .swipe-arrow {
+  /* ── SWIPE NAV ── */
+  .year-swipe-nav { display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:14px; }
+  .year-swipe-arrow {
     background:var(--g4); border:none; width:40px; height:40px; border-radius:50%;
     font-size:1.1rem; cursor:pointer; display:flex; align-items:center; justify-content:center;
-    color:var(--g1); font-weight:900; transition:background .15s;
+    color:var(--g1); font-weight:900;
   }
-  .swipe-arrow:hover { background:var(--g3); }
-  .swipe-label { font-family:'Fredoka One',cursive; font-size:1.1rem; color:var(--mid); min-width:90px; text-align:center; }
+  .year-swipe-label { font-family:'Fredoka One',cursive; font-size:1.1rem; color:var(--mid); min-width:70px; text-align:center; }
+
   .empty-state { text-align:center; padding:36px 0; color:var(--gray); font-weight:700; font-size:1rem; }
-  .empty-state .es-icon { font-size:2.8rem; margin-bottom:10px; }
+  .empty-state .es-icon { font-size:2.8rem; margin-bottom:10px; display:block; }
 </style>
 </head>
 <body>
@@ -207,80 +223,83 @@
 </div>
 
 <div class="tabs">
-  <div class="tab active" data-tab="home"><span class="ti">🏠</span>Inicio</div>
-  <div class="tab" data-tab="calendar"><span class="ti">📅</span>Calendario</div>
-  <div class="tab" data-tab="weight"><span class="ti">⚖️</span>Peso</div>
-  <div class="tab" data-tab="history"><span class="ti">📊</span>Historial</div>
+  <div class="tab active" data-idx="0"><span class="ti">🏠</span>Track</div>
+  <div class="tab" data-idx="1"><span class="ti">📅</span>Calendar</div>
+  <div class="tab" data-idx="2"><span class="ti">⚖️</span>Weight</div>
+  <div class="tab" data-idx="3"><span class="ti">📊</span>History</div>
 </div>
 
-<!-- HOME -->
-<div class="page active" id="page-home">
-  <div class="card">
-    <div class="card-title">🎯 Metas <span id="homeYear"></span></div>
-    <div class="activity-grid" id="activityGrid"></div>
-  </div>
-</div>
+<div class="swipe-container" id="swipeContainer">
+  <div class="pages-track" id="pagesTrack">
 
-<!-- CALENDAR -->
-<div class="page" id="page-calendar">
-  <div class="card">
-    <div class="cal-header">
-      <button class="cal-nav" id="calPrev">◀</button>
-      <h2 class="cal-month-title" id="calTitle"></h2>
-      <button class="cal-nav" id="calNext">▶</button>
+    <!-- PAGE 0: TRACK -->
+    <div class="page" id="page-0">
+      <div class="card">
+        <div class="card-title">🎯 Goals <span id="homeYear"></span></div>
+        <div class="activity-grid" id="activityGrid"></div>
+      </div>
     </div>
-    <div class="cal-grid" id="calGrid"></div>
-  </div>
-</div>
 
-<!-- WEIGHT -->
-<div class="page" id="page-weight">
-  <div class="card">
-    <div class="card-title">⚖️ Evolución de peso — Historial completo</div>
-    <div class="weight-legend">
-      <div class="wleg-item"><div class="wleg-dot" style="background:#2ecc71"></div>Óptimo (&lt;71 kg)</div>
-      <div class="wleg-item"><div class="wleg-dot" style="background:#1a7a3f"></div>Normal (72–77 kg)</div>
-      <div class="wleg-item"><div class="wleg-dot" style="background:#f39c12"></div>Atención (78 kg)</div>
-      <div class="wleg-item"><div class="wleg-dot" style="background:#e74c3c"></div>Alerta (&gt;78 kg)</div>
+    <!-- PAGE 1: CALENDAR -->
+    <div class="page" id="page-1">
+      <div class="card">
+        <div class="cal-header">
+          <button class="cal-nav" id="calPrev">◀</button>
+          <h2 class="cal-month-title" id="calTitle"></h2>
+          <button class="cal-nav" id="calNext">▶</button>
+        </div>
+        <div class="cal-grid" id="calGrid"></div>
+      </div>
     </div>
-    <div class="weight-chart-wrap">
-      <canvas id="weightChart" height="240"></canvas>
-    </div>
-  </div>
-  <div class="card">
-    <div class="card-title">📋 Todos los registros</div>
-    <div id="weightList"></div>
-  </div>
-</div>
 
-<!-- HISTORY -->
-<div class="page" id="page-history">
-  <div class="card">
-    <div class="card-title">📊 Comparativa anual</div>
-    <div class="swipe-nav">
-      <button class="swipe-arrow" id="hYearPrev">◀</button>
-      <span class="swipe-label" id="hYearLabel"></span>
-      <button class="swipe-arrow" id="hYearNext">▶</button>
+    <!-- PAGE 2: WEIGHT -->
+    <div class="page" id="page-2">
+      <div class="card">
+        <div class="card-title">⚖️ Weight evolution</div>
+        <div class="weight-legend">
+          <div class="wleg-item"><div class="wleg-dot" style="background:#2ecc71"></div>Óptimo &lt;71kg</div>
+          <div class="wleg-item"><div class="wleg-dot" style="background:#1a7a3f"></div>Normal 72–77kg</div>
+          <div class="wleg-item"><div class="wleg-dot" style="background:#f39c12"></div>Atención 78kg</div>
+          <div class="wleg-item"><div class="wleg-dot" style="background:#e74c3c"></div>Alerta &gt;78kg</div>
+        </div>
+        <div class="weight-chart-wrap">
+          <canvas id="weightChart" height="240"></canvas>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">📋 All records</div>
+        <div id="weightList"></div>
+      </div>
     </div>
-    <div id="historyContent"></div>
-  </div>
-</div>
 
-<!-- FAB -->
-<button class="log-fab" id="fabBtn">＋</button>
+    <!-- PAGE 3: HISTORY -->
+    <div class="page" id="page-3">
+      <div class="card">
+        <div class="card-title">📊 Annual history</div>
+        <div class="year-swipe-nav">
+          <button class="year-swipe-arrow" id="hYearPrev">◀</button>
+          <span class="year-swipe-label" id="hYearLabel"></span>
+          <button class="year-swipe-arrow" id="hYearNext">▶</button>
+        </div>
+        <div id="historyContent"></div>
+      </div>
+    </div>
+
+  </div><!-- /pages-track -->
+</div><!-- /swipe-container -->
 
 <!-- LOG MODAL -->
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal">
     <button class="modal-close-btn" id="modalClose">✕</button>
-    <h2 class="modal-title">✏️ Registrar día</h2>
+    <h2 class="modal-title">✏️ Log day</h2>
     <div class="modal-date" id="modalDate"></div>
     <div class="activity-btn-grid" id="modalActGrid"></div>
     <div class="weight-row">
       <input type="number" step="0.1" class="weight-input" id="weightInputModal" placeholder="Ej: 74.5">
-      <span class="weight-label">⚖️ kg (opcional)</span>
+      <span class="weight-label">⚖️ kg (optional)</span>
     </div>
-    <button class="modal-save" id="modalSave">Guardar 💾</button>
+    <button class="modal-save" id="modalSave">Save 💾</button>
   </div>
 </div>
 
@@ -288,14 +307,14 @@
 <div class="modal-overlay" id="yearModal">
   <div class="modal">
     <button class="modal-close-btn" id="yearModalClose">✕</button>
-    <h2 class="modal-title">🗓️ Cambiar año</h2>
+    <h2 class="modal-title">🗓️ Select year</h2>
     <div id="yearBtnList" style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;"></div>
   </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-// ── DATA ──────────────────────────────────────────────
+// ── DATA ─────────────────────────────────────────────
 const ACTIVITIES = [
   { id:'workout',      name:'Workout',    icon:'🏋️' },
   { id:'running',      name:'Running',    icon:'🏃' },
@@ -338,6 +357,8 @@ const saveWeights=w=>localStorage.setItem(KW,JSON.stringify(w));
 let days=loadDays(), weights=loadWeights();
 let activeYear=2026, calYear=2026, calMonth=new Date().getMonth();
 let hYear=2026, modalDate=null;
+let currentPage=0;
+let weightChartInst=null;
 
 const pad=n=>String(n).padStart(2,'0');
 const dateStr=(y,m,d)=>`${y}-${pad(m+1)}-${pad(d)}`;
@@ -350,113 +371,117 @@ function countYear(actId,year){
   return (HIST[year]&&HIST[year][actId])||0;
 }
 
-// ── STREAK CALCULATIONS ────────────────────────────────
-// Returns ISO week string "YYYY-Www" for a date string "YYYY-MM-DD"
+// ── ISO WEEK ─────────────────────────────────────────
 function isoWeek(dateS){
   const d=new Date(dateS+'T00:00:00');
-  const jan4=new Date(d.getFullYear(),0,4);
-  const startOfWeek1=new Date(jan4);
-  startOfWeek1.setDate(jan4.getDate()-(jan4.getDay()||7)+1);
-  const diff=d-startOfWeek1;
-  const week=Math.floor(diff/(7*86400000))+1;
-  let yr=d.getFullYear();
-  if(week<1){
-    // belongs to last year's last week
-    const dec28=new Date(yr-1,11,28);
-    return isoWeek(dateStr(yr-1,11,dec28.getDate()));
-  }
-  return `${yr}-W${pad(week)}`;
+  const day=d.getDay()||7;
+  d.setDate(d.getDate()+4-day);
+  const yearStart=new Date(d.getFullYear(),0,1);
+  const week=Math.ceil((((d-yearStart)/86400000)+1)/7);
+  return`${d.getFullYear()}-W${pad(week)}`;
+}
+function prevIsoWeek(w){
+  const[wy,wn]=w.split('-W').map(Number);
+  if(wn>1) return`${wy}-W${pad(wn-1)}`;
+  // last week of previous year
+  const dec28=new Date(wy-1,11,28);
+  return isoWeek(dateStr(wy-1,11,dec28.getDate()));
 }
 
+// ── STREAKS ──────────────────────────────────────────
 function getActivityStreaks(actId){
-  // Get all dates for this activity, sorted ascending
-  const actDates = Object.entries(days)
-    .filter(([k,v])=>v.includes(actId))
-    .map(([k])=>k)
-    .sort();
-
-  // 🔥 Daily streak — consecutive days ending today or yesterday
-  let fireStreak=0;
+  // 🔥 daily streak
+  let fire=0;
   const td=new Date(todayStr()+'T00:00:00');
-  for(let i=0;i<365;i++){
-    const check=new Date(td); check.setDate(td.getDate()-i);
-    const s=dateStr(check.getFullYear(),check.getMonth(),check.getDate());
-    if((days[s]||[]).includes(actId)) fireStreak++;
+  for(let i=0;i<730;i++){
+    const s=dateStr(td.getFullYear(),td.getMonth(),td.getDate());
+    if((days[s]||[]).includes(actId)){fire++;td.setDate(td.getDate()-1);}
     else break;
   }
 
-  // Build week map: week -> count of days
+  // weekly map
   const weekMap={};
-  actDates.forEach(d=>{
-    const w=isoWeek(d);
+  Object.entries(days).filter(([k,v])=>v.includes(actId)).forEach(([k])=>{
+    const w=isoWeek(k);
     weekMap[w]=(weekMap[w]||0)+1;
   });
 
-  const allWeeks=Object.keys(weekMap).sort();
+  // 🏆 trophy: consecutive weeks ≥1
+  let trophy=0;
+  let w=isoWeek(todayStr());
+  while((weekMap[w]||0)>=1){trophy++;w=prevIsoWeek(w);}
 
-  // 🏆 Trophy — consecutive weeks with ≥1 session, ending on current/last week
-  let trophyStreak=0;
-  const curWeek=isoWeek(todayStr());
-  // find streak ending at curWeek
-  let w=curWeek;
-  while(weekMap[w]>=1){
-    trophyStreak++;
-    // go back one week
-    const [wy,wn]=w.split('-W').map(Number);
-    let prevW=wn-1, prevY=wy;
-    if(prevW<1){ prevY--; prevW=isoWeeksInYear(prevY); }
-    w=`${prevY}-W${pad(prevW)}`;
-  }
+  // 💣 bomb: consecutive weeks ≥3
+  let bomb=0;
+  w=isoWeek(todayStr());
+  while((weekMap[w]||0)>=3){bomb++;w=prevIsoWeek(w);}
 
-  // 💣 Bomb — consecutive weeks with ≥3 sessions, ending on current/last week
-  let bombStreak=0;
-  w=curWeek;
-  while((weekMap[w]||0)>=3){
-    bombStreak++;
-    const [wy,wn]=w.split('-W').map(Number);
-    let prevW=wn-1, prevY=wy;
-    if(prevW<1){ prevY--; prevW=isoWeeksInYear(prevY); }
-    w=`${prevY}-W${pad(prevW)}`;
-  }
-
-  return { fire:fireStreak, trophy:trophyStreak, bomb:bombStreak };
+  return{fire,trophy,bomb};
 }
 
-function isoWeeksInYear(y){
-  // A year has 53 weeks if Dec 28 is a Thursday
-  const dec28=new Date(y,11,28);
-  const dow=dec28.getDay()||7;
-  return dow===4 ? 53 : 52;
-}
-
-// ── ZONE COLORS ───────────────────────────────────────
+// ── ZONE COLORS ──────────────────────────────────────
 function getZoneColor(kg){
-  if(kg<71)  return '#2ecc71';
-  if(kg<=77) return '#1a7a3f';
-  if(kg<=78) return '#f39c12';
-  return '#e74c3c';
+  if(kg<71)  return'#2ecc71';
+  if(kg<=77) return'#1a7a3f';
+  if(kg<=78) return'#f39c12';
+  return'#e74c3c';
 }
 function getZoneName(kg){
-  if(kg<71)  return 'Óptimo';
-  if(kg<=77) return 'Normal';
-  if(kg<=78) return 'Atención';
-  return 'Alerta';
+  if(kg<71)  return'Óptimo';
+  if(kg<=77) return'Normal';
+  if(kg<=78) return'Atención';
+  return'Alerta';
 }
 
-// ── TABS ──────────────────────────────────────────────
-document.querySelectorAll('.tab').forEach(t=>{
-  t.addEventListener('click',()=>{
-    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
-    document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
-    t.classList.add('active');
-    document.getElementById('page-'+t.dataset.tab).classList.add('active');
-    if(t.dataset.tab==='calendar') renderCalendar();
-    if(t.dataset.tab==='weight')   renderWeight();
-    if(t.dataset.tab==='history')  renderHistory();
-  });
+// ── SWIPE / TAB NAVIGATION ───────────────────────────
+const track=document.getElementById('pagesTrack');
+const tabs=document.querySelectorAll('.tab');
+
+function goToPage(idx,animate=true){
+  if(!animate) track.style.transition='none';
+  else track.style.transition='transform .35s cubic-bezier(.4,0,.2,1)';
+  track.style.transform=`translateX(-${idx*25}%)`;
+  tabs.forEach((t,i)=>t.classList.toggle('active',i===idx));
+  currentPage=idx;
+  // lazy render
+  if(idx===1) renderCalendar();
+  if(idx===2) renderWeight();
+  if(idx===3) renderHistory();
+}
+
+tabs.forEach(t=>t.addEventListener('click',()=>goToPage(+t.dataset.idx)));
+
+// Touch swipe
+let touchStartX=0, touchStartY=0, swiping=false;
+const sc=document.getElementById('swipeContainer');
+
+sc.addEventListener('touchstart',e=>{
+  touchStartX=e.touches[0].clientX;
+  touchStartY=e.touches[0].clientY;
+  swiping=false;
+},{passive:true});
+
+sc.addEventListener('touchmove',e=>{
+  const dx=e.touches[0].clientX-touchStartX;
+  const dy=e.touches[0].clientY-touchStartY;
+  if(!swiping && Math.abs(dx)>Math.abs(dy) && Math.abs(dx)>8){
+    swiping=true;
+  }
+  // prevent vertical scroll hijack only when horizontal swipe detected
+  if(swiping) e.preventDefault();
+},{passive:false});
+
+sc.addEventListener('touchend',e=>{
+  if(!swiping) return;
+  const dx=e.changedTouches[0].clientX-touchStartX;
+  if(Math.abs(dx)>50){
+    if(dx<0 && currentPage<3) goToPage(currentPage+1);
+    if(dx>0 && currentPage>0) goToPage(currentPage-1);
+  }
+  swiping=false;
 });
 
-// ── YEAR SWITCHER ─────────────────────────────────────
+// ── YEAR SWITCHER ────────────────────────────────────
 document.getElementById('yearSwitchBtn').addEventListener('click',()=>{
   document.getElementById('yearModal').classList.add('open');
   const list=document.getElementById('yearBtnList');
@@ -476,7 +501,7 @@ document.getElementById('yearSwitchBtn').addEventListener('click',()=>{
 });
 document.getElementById('yearModalClose').addEventListener('click',()=>document.getElementById('yearModal').classList.remove('open'));
 
-// ── HOME ──────────────────────────────────────────────
+// ── HOME ─────────────────────────────────────────────
 function renderHome(){
   document.getElementById('homeYear').textContent=activeYear;
   const goals=GOALS[activeYear]||{};
@@ -486,13 +511,12 @@ function renderHome(){
   ACTIVITIES.filter(a=>goals[a.id]).forEach(a=>{
     const goal=goals[a.id], done=countYear(a.id,activeYear);
     const pct=Math.min(100,Math.round(done/goal*100));
-    const streaks=getActivityStreaks(a.id);
+    const st=getActivityStreaks(a.id);
 
-    // Build streak badges HTML
     let streakHTML='';
-    if(streaks.fire>0)   streakHTML+=`<span class="streak-pill fire">🔥 ${streaks.fire}</span>`;
-    if(streaks.trophy>0) streakHTML+=`<span class="streak-pill trophy">🏆 ${streaks.trophy}</span>`;
-    if(streaks.bomb>0)   streakHTML+=`<span class="streak-pill bomb">💣 ${streaks.bomb}</span>`;
+    if(st.fire>=2)   streakHTML+=`<span class="streak-pill fire">🔥 ${st.fire}</span>`;
+    if(st.trophy>=2) streakHTML+=`<span class="streak-pill trophy">🏆 ${st.trophy}</span>`;
+    if(st.bomb>=2)   streakHTML+=`<span class="streak-pill bomb">💣 ${st.bomb}</span>`;
 
     const card=document.createElement('div');
     card.className='act-card';
@@ -501,30 +525,35 @@ function renderHome(){
       <div class="act-icon">${a.icon}</div>
       <div class="act-name">${a.name}</div>
       <div class="act-count">${done}</div>
-      <div class="act-goal">meta: ${goal} días</div>
+      <div class="act-goal">goal: ${goal} days</div>
       <div class="act-bar-wrap"><div class="act-bar" style="width:${pct}%"></div></div>
       <div class="act-pct-row">
-        <span>${done} de ${goal}</span>
+        <span>${done} of ${goal}</span>
         <span>${pct}%</span>
       </div>`;
     grid.appendChild(card);
   });
 }
 
-// ── CALENDAR ──────────────────────────────────────────
+// ── CALENDAR ─────────────────────────────────────────
 function renderCalendar(){
   document.getElementById('calTitle').textContent=`${MONTHS_ES[calMonth]} ${calYear}`;
   const grid=document.getElementById('calGrid');
   grid.innerHTML='';
+
   ['L','M','X','J','V','S','D'].forEach(d=>{
     const c=document.createElement('div');
-    c.className='cal-day-name';c.textContent=d;grid.appendChild(c);
+    c.className='cal-day-name'; c.textContent=d; grid.appendChild(c);
   });
+
   const firstDay=new Date(calYear,calMonth,1).getDay();
   const offset=(firstDay+6)%7;
   const dim=new Date(calYear,calMonth+1,0).getDate();
   const ts=todayStr();
-  for(let i=0;i<offset;i++){const c=document.createElement('div');c.className='cal-day empty';grid.appendChild(c);}
+
+  for(let i=0;i<offset;i++){
+    const c=document.createElement('div'); c.className='cal-day empty'; grid.appendChild(c);
+  }
   for(let d=1;d<=dim;d++){
     const s=dateStr(calYear,calMonth,d);
     const acts=days[s]||[];
@@ -533,10 +562,11 @@ function renderCalendar(){
     c.className='cal-day';
     if(acts.length>0) c.classList.add('has-data');
     if(s===ts) c.classList.add('today');
+
     let iconsHtml='';
     acts.forEach(a=>{
       const act=ACTIVITIES.find(x=>x.id===a);
-      if(act) iconsHtml+=`<span title="${act.name}">${act.icon}</span>`;
+      if(act) iconsHtml+=`<span>${act.icon}</span>`;
     });
     c.innerHTML=`<div class="day-num">${d}</div>
       <div class="day-icons">${iconsHtml}</div>
@@ -545,17 +575,23 @@ function renderCalendar(){
     grid.appendChild(c);
   }
 }
-document.getElementById('calPrev').addEventListener('click',()=>{calMonth--;if(calMonth<0){calMonth=11;calYear--;}renderCalendar();});
-document.getElementById('calNext').addEventListener('click',()=>{calMonth++;if(calMonth>11){calMonth=0;calYear++;}renderCalendar();});
 
-// ── WEIGHT ────────────────────────────────────────────
-let weightChart=null;
+document.getElementById('calPrev').addEventListener('click',e=>{
+  e.stopPropagation();
+  calMonth--; if(calMonth<0){calMonth=11;calYear--;} renderCalendar();
+});
+document.getElementById('calNext').addEventListener('click',e=>{
+  e.stopPropagation();
+  calMonth++; if(calMonth>11){calMonth=0;calYear++;} renderCalendar();
+});
+
+// ── WEIGHT ───────────────────────────────────────────
 function renderWeight(){
   const sorted=[...weights].sort((a,b)=>a.date.localeCompare(b.date));
   const labels=sorted.map(w=>{const[y,m,d]=w.date.split('-');return`${d}/${m}/${y.slice(2)}`;});
   const data=sorted.map(w=>w.kg);
   const ctx=document.getElementById('weightChart').getContext('2d');
-  if(weightChart) weightChart.destroy();
+  if(weightChartInst) weightChartInst.destroy();
   const minW=data.length?Math.min(...data)-3:60;
   const maxW=data.length?Math.max(...data)+3:90;
 
@@ -576,7 +612,7 @@ function renderWeight(){
     }
   };
 
-  weightChart=new Chart(ctx,{
+  weightChartInst=new Chart(ctx,{
     type:'line',
     plugins:[colorLinePlugin],
     data:{
@@ -596,16 +632,16 @@ function renderWeight(){
           pointRadius:6,pointHoverRadius:9,
           fill:true,tension:0.35,borderWidth:3,
         },
-        {label:'71kg',data:Array(labels.length).fill(71),borderColor:'#2ecc71',borderWidth:1.5,borderDash:[5,4],pointRadius:0,fill:false},
-        {label:'77kg',data:Array(labels.length).fill(77),borderColor:'#1a7a3f',borderWidth:1.5,borderDash:[5,4],pointRadius:0,fill:false},
-        {label:'78kg',data:Array(labels.length).fill(78),borderColor:'#e74c3c',borderWidth:1.5,borderDash:[5,4],pointRadius:0,fill:false},
+        {label:'71',data:Array(labels.length).fill(71),borderColor:'#2ecc71',borderWidth:1.5,borderDash:[5,4],pointRadius:0,fill:false},
+        {label:'77',data:Array(labels.length).fill(77),borderColor:'#1a7a3f',borderWidth:1.5,borderDash:[5,4],pointRadius:0,fill:false},
+        {label:'78',data:Array(labels.length).fill(78),borderColor:'#e74c3c',borderWidth:1.5,borderDash:[5,4],pointRadius:0,fill:false},
       ]
     },
     options:{
       responsive:true,
       plugins:{
         legend:{display:false},
-        tooltip:{callbacks:{label:c=>c.datasetIndex!==0?null:`${c.parsed.y} kg — ${getZoneName(c.parsed.y)}`}}
+        tooltip:{callbacks:{label:c=>c.datasetIndex!==0?null:`${c.parsed.y}kg — ${getZoneName(c.parsed.y)}`}}
       },
       scales:{
         y:{min:minW,max:maxW,ticks:{callback:v=>v+'kg'},grid:{color:'rgba(0,0,0,0.05)'}},
@@ -615,7 +651,7 @@ function renderWeight(){
   });
 
   const list=document.getElementById('weightList');
-  if(!sorted.length){list.innerHTML='<div class="empty-state"><div class="es-icon">⚖️</div>Sin registros</div>';return;}
+  if(!sorted.length){list.innerHTML='<div class="empty-state"><span class="es-icon">⚖️</span>No records yet</div>';return;}
   list.innerHTML=[...sorted].reverse().map(w=>{
     const[y,m,d]=w.date.split('-');
     const col=getZoneColor(w.kg),zone=getZoneName(w.kg);
@@ -628,13 +664,13 @@ function renderWeight(){
   }).join('');
 }
 
-// ── HISTORY ───────────────────────────────────────────
+// ── HISTORY ──────────────────────────────────────────
 function renderHistory(){
   document.getElementById('hYearLabel').textContent=hYear;
   const goals=GOALS[hYear]||{};
   const div=document.getElementById('historyContent');
   const acts=ACTIVITIES.filter(a=>goals[a.id]);
-  if(!acts.length){div.innerHTML='<div class="empty-state"><div class="es-icon">📊</div>Sin metas para este año</div>';return;}
+  if(!acts.length){div.innerHTML='<div class="empty-state"><span class="es-icon">📊</span>No goals for this year</div>';return;}
   div.innerHTML=acts.map(a=>{
     const goal=goals[a.id],done=countYear(a.id,hYear);
     const pct=Math.min(100,Math.round(done/goal*100));
@@ -642,7 +678,7 @@ function renderHistory(){
     return`<div class="hist-row">
       <div class="hist-label">${a.icon} ${a.name}</div>
       <div class="hist-bar-wrap"><div class="hist-bar" style="width:${pct}%;background:${col}"></div></div>
-      <div class="hist-val" style="display:flex;flex-direction:column;align-items:flex-end;gap:2px">
+      <div class="hist-val">
         <span>${done}/${goal}</span>
         <span style="font-size:.75rem;color:${col};font-weight:900">${pct}%</span>
       </div></div>`;
@@ -651,7 +687,7 @@ function renderHistory(){
 document.getElementById('hYearPrev').addEventListener('click',()=>{hYear--;renderHistory();});
 document.getElementById('hYearNext').addEventListener('click',()=>{hYear++;renderHistory();});
 
-// ── MODAL ─────────────────────────────────────────────
+// ── MODAL ────────────────────────────────────────────
 function openModal(dateOverride){
   const s=dateOverride||todayStr();
   modalDate=s;
@@ -673,7 +709,6 @@ function openModal(dateOverride){
   document.getElementById('modalOverlay').classList.add('open');
 }
 
-document.getElementById('fabBtn').addEventListener('click',()=>openModal());
 document.getElementById('modalClose').addEventListener('click',()=>document.getElementById('modalOverlay').classList.remove('open'));
 document.getElementById('modalOverlay').addEventListener('click',e=>{
   if(e.target===document.getElementById('modalOverlay')) document.getElementById('modalOverlay').classList.remove('open');
@@ -691,13 +726,14 @@ document.getElementById('modalSave').addEventListener('click',()=>{
   }
   document.getElementById('modalOverlay').classList.remove('open');
   renderHome();
-  if(document.getElementById('page-calendar').classList.contains('active')) renderCalendar();
-  if(document.getElementById('page-weight').classList.contains('active'))   renderWeight();
+  if(currentPage===1) renderCalendar();
+  if(currentPage===2) renderWeight();
 });
 
-// ── INIT ──────────────────────────────────────────────
+// ── INIT ─────────────────────────────────────────────
 renderHome();
 renderCalendar();
+goToPage(0,false);
 </script>
 </body>
 </html>
