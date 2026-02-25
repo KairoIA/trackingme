@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a7a3f"/>
+      <stop offset="100%" style="stop-color:#0d4f28"/>
+    </linearGradient>
+    <linearGradient id="arrow" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#2ecc71"/>
+      <stop offset="100%" style="stop-color:#a8f0c6"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="6" result="coloredBlur"/>
+      <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background rounded square -->
+  <rect width="512" height="512" rx="110" ry="110" fill="url(#bg)"/>
+
+  <!-- Subtle grid lines -->
+  <line x1="256" y1="80" x2="256" y2="432" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+  <line x1="80" y1="256" x2="432" y2="256" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+
+  <!-- Progress arc (background) -->
+  <circle cx="256" cy="256" r="155" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="18" stroke-linecap="round"/>
+
+  <!-- Progress arc (foreground ~75%) -->
+  <circle cx="256" cy="256" r="155"
+    fill="none"
+    stroke="url(#arrow)"
+    stroke-width="18"
+    stroke-linecap="round"
+    stroke-dasharray="730"
+    stroke-dashoffset="182"
+    transform="rotate(-90 256 256)"
+    filter="url(#glow)"
+  />
+
+  <!-- Upward arrow / chart line inside -->
+  <polyline
+    points="148,310 210,245 265,275 340,175"
+    fill="none"
+    stroke="white"
+    stroke-width="22"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    opacity="0.95"
+  />
+
+  <!-- Arrow head -->
+  <polyline
+    points="310,168 342,172 338,204"
+    fill="none"
+    stroke="white"
+    stroke-width="22"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    opacity="0.95"
+  />
+
+  <!-- Dot on last point (glow) -->
+  <circle cx="340" cy="175" r="16" fill="#2ecc71" filter="url(#glow)"/>
+  <circle cx="340" cy="175" r="9" fill="white"/>
+
+  <!-- Small dots on line -->
+  <circle cx="148" cy="310" r="8" fill="rgba(255,255,255,0.5)"/>
+  <circle cx="210" cy="245" r="8" fill="rgba(255,255,255,0.5)"/>
+  <circle cx="265" cy="275" r="8" fill="rgba(255,255,255,0.5)"/>
+</svg>

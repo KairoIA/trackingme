@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TrackingMe 🏆</title>
+<link rel="apple-touch-icon" href="logo.svg">
+<link rel="icon" type="image/svg+xml" href="logo.svg">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="TrackingMe">
+<meta name="theme-color" content="#1a7a3f">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fredoka+One&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --g1: #1a7a3f; --g2: #2ecc71; --g3: #a8f0c6;
+    --g4: #d4fae8; --g5: #f0fff7; --white: #ffffff;
+    --dark: #0f2419; --mid: #2d5a3d; --gray: #8aab96;
+    --light: #e8f5ee; --accent: #ff6b35; --yellow: #ffd166;
+    --radius: 18px; --shadow: 0 4px 24px rgba(26,122,63,0.13);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family:'Nunito',sans-serif; background:var(--g5); color:var(--dark); min-height:100vh; overflow-x:hidden; }
+  h1,h2,h3 { font-family:'Fredoka One',cursive; }
+
+  .topbar {
+    background:var(--g1); color:white;
+    padding:14px 20px 12px;
+    display:flex; align-items:center; justify-content:space-between;
+    position:sticky; top:0; z-index:100;
+    box-shadow:0 2px 16px rgba(0,0,0,0.18);
+  }
+  .topbar h1 { font-size:1.65rem; letter-spacing:.5px; }
+  .year-btn {
+    background:rgba(255,255,255,0.18); border:2px solid rgba(255,255,255,0.4);
+    color:white; font-family:'Fredoka One',cursive; font-size:1.1rem;
+    padding:6px 16px; border-radius:30px; cursor:pointer; transition:background .2s;
+  }
+  .year-btn:hover { background:rgba(255,255,255,0.3); }
+
+  .tabs {
+    display:flex; background:var(--white); border-bottom:2px solid var(--g3);
+    position:sticky; top:58px; z-index:99; overflow-x:auto;
+  }
+  .tabs::-webkit-scrollbar { display:none; }
+  .tab {
+    flex:1; min-width:80px; padding:11px 8px; text-align:center;
+    font-weight:800; font-size:.76rem; color:var(--gray);
+    cursor:pointer; border-bottom:3px solid transparent; transition:all .2s; white-space:nowrap;
+  }
+  .tab.active { color:var(--g1); border-bottom-color:var(--g1); }
+  .tab .ti { font-size:1.15rem; display:block; }
+
+  .page { display:none; padding:16px; max-width:600px; margin:0 auto; padding-bottom:90px; }
+  .page.active { display:block; }
+
+  .card { background:white; border-radius:var(--radius); padding:18px; margin-bottom:14px; box-shadow:var(--shadow); }
+  .card-title { font-size:1.05rem; color:var(--mid); margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+
+  .activity-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; }
+  .act-card {
+    background:var(--g5); border-radius:14px; padding:14px;
+    border:2px solid transparent; transition:all .2s; position:relative;
+  }
+  .act-card .act-icon { font-size:1.8rem; }
+  .act-card .act-name { font-weight:800; font-size:.85rem; margin:4px 0 2px; color:var(--mid); }
+  .act-card .act-count { font-family:'Fredoka One',cursive; font-size:1.6rem; color:var(--g1); }
+  .act-card .act-goal { font-size:.75rem; color:var(--gray); }
+  .act-card .act-bar-wrap { background:var(--g4); border-radius:99px; height:6px; margin-top:8px; overflow:hidden; }
+  .act-card .act-bar { background:linear-gradient(90deg,var(--g1),var(--g2)); border-radius:99px; height:100%; transition:width .6s cubic-bezier(.34,1.56,.64,1); }
+  .act-card .act-pct {
+    position:absolute; top:10px; right:12px; font-size:.7rem; font-weight:800;
+    background:var(--g2); color:white; padding:2px 7px; border-radius:99px;
+  }
+
+  .log-fab {
+    position:fixed; bottom:24px; right:20px; background:var(--g1); color:white;
+    border:none; width:60px; height:60px; border-radius:50%; font-size:1.8rem;
+    cursor:pointer; box-shadow:0 6px 24px rgba(26,122,63,.45);
+    z-index:200; transition:transform .2s,box-shadow .2s;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .log-fab:hover { transform:scale(1.1); }
+
+  .modal-overlay {
+    display:none; position:fixed; inset:0; background:rgba(0,0,0,.4);
+    z-index:300; align-items:flex-end; justify-content:center;
+  }
+  .modal-overlay.open { display:flex; }
+  .modal {
+    background:white; border-radius:24px 24px 0 0;
+    padding:24px 20px 36px; width:100%; max-width:600px;
+    animation:slideUp .3s ease; max-height:90vh; overflow-y:auto; position:relative;
+  }
+  @keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+  .modal-title { font-size:1.3rem; margin-bottom:4px; color:var(--g1); }
+  .modal-date { font-size:.88rem; font-weight:700; color:var(--gray); margin-bottom:16px; }
+  .activity-btn-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:18px; }
+  .act-btn {
+    border:2px solid var(--g3); background:var(--g5); border-radius:12px; padding:10px 6px;
+    text-align:center; cursor:pointer; font-family:'Nunito',sans-serif;
+    font-weight:800; font-size:.78rem; color:var(--mid); transition:all .15s;
+  }
+  .act-btn .abi { font-size:1.4rem; display:block; margin-bottom:2px; }
+  .act-btn.selected { border-color:var(--g1); background:var(--g3); color:var(--g1); }
+  .weight-row { display:flex; gap:10px; align-items:center; margin-bottom:16px; }
+  .weight-input {
+    flex:1; border:2px solid var(--g3); border-radius:10px; padding:10px 14px;
+    font-family:'Nunito',sans-serif; font-size:1rem; font-weight:700;
+    color:var(--dark); outline:none;
+  }
+  .weight-input:focus { border-color:var(--g1); }
+  .weight-label { font-weight:700; color:var(--gray); font-size:.9rem; white-space:nowrap; }
+  .modal-save {
+    width:100%; background:var(--g1); color:white; border:none;
+    border-radius:14px; padding:14px; font-family:'Fredoka One',cursive;
+    font-size:1.2rem; cursor:pointer; transition:background .2s;
+  }
+  .modal-save:hover { background:var(--mid); }
+  .modal-close-btn {
+    position:absolute; top:16px; right:18px; background:var(--light); border:none;
+    width:32px; height:32px; border-radius:50%; font-size:1.1rem; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; color:var(--gray);
+  }
+
+  /* CALENDAR */
+  .cal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+  .cal-nav {
+    background:var(--g4); border:none; width:38px; height:38px; border-radius:50%;
+    font-size:1.1rem; cursor:pointer; display:flex; align-items:center; justify-content:center;
+    color:var(--g1); font-weight:900; transition:background .15s;
+  }
+  .cal-nav:hover { background:var(--g3); }
+  .cal-month-title { font-size:1.2rem; color:var(--g1); }
+  .cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:3px; }
+  .cal-day-name { text-align:center; font-size:.68rem; font-weight:800; color:var(--gray); padding:4px 0; }
+  .cal-day {
+    aspect-ratio:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    border-radius:10px; cursor:pointer; font-size:.78rem; font-weight:700;
+    transition:background .15s; position:relative; padding:2px; min-height:44px;
+  }
+  .cal-day:hover:not(.empty) { background:var(--g4); }
+  .cal-day.today { background:var(--g3); color:var(--g1); font-weight:900; }
+  .cal-day.has-data { background:var(--g2); color:white; }
+  .cal-day.empty { cursor:default; }
+  .cal-day .day-num { font-size:.78rem; font-weight:800; line-height:1; }
+  .cal-day .day-icons { display:flex; gap:1px; flex-wrap:wrap; justify-content:center; margin-top:1px; font-size:.6rem; line-height:1; max-width:100%; }
+  .cal-day .day-wlbl { font-size:.5rem; color:var(--accent); font-weight:800; margin-top:1px; line-height:1; }
+  .cal-day.has-data .day-wlbl { color:var(--yellow); }
+
+  /* WEIGHT */
+  .weight-chart-wrap { overflow-x:auto; padding-bottom:8px; }
+  .weight-legend { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:12px; }
+  .wleg-item { display:flex; align-items:center; gap:5px; font-size:.74rem; font-weight:700; }
+  .wleg-dot { width:14px; height:4px; border-radius:99px; }
+
+  /* HISTORY */
+  .hist-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+  .hist-label { font-size:.82rem; font-weight:700; display:flex; align-items:center; gap:6px; min-width:90px; }
+  .hist-val { font-size:.82rem; font-weight:800; color:var(--mid); min-width:48px; text-align:right; }
+  .hist-bar-wrap { flex:1; height:7px; background:var(--g4); border-radius:99px; margin:0 8px; overflow:hidden; }
+  .hist-bar { height:100%; border-radius:99px; transition:width .5s; }
+
+  .streak-badge {
+    display:inline-flex; align-items:center; gap:6px;
+    background:linear-gradient(135deg,var(--accent),var(--yellow));
+    color:white; border-radius:99px; padding:5px 14px;
+    font-size:.82rem; font-weight:800; margin-bottom:14px;
+  }
+  .swipe-nav { display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:10px; }
+  .swipe-arrow {
+    background:var(--g4); border:none; width:34px; height:34px; border-radius:50%;
+    font-size:1rem; cursor:pointer; display:flex; align-items:center; justify-content:center;
+    color:var(--g1); font-weight:900; transition:background .15s;
+  }
+  .swipe-arrow:hover { background:var(--g3); }
+  .swipe-label { font-family:'Fredoka One',cursive; font-size:1rem; color:var(--mid); min-width:90px; text-align:center; }
+  .empty-state { text-align:center; padding:32px 0; color:var(--gray); font-weight:700; }
+  .empty-state .es-icon { font-size:2.5rem; margin-bottom:8px; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>TrackingMe 🏆</h1>
+  <button class="year-btn" id="yearSwitchBtn">2026 ▾</button>
+</div>
+
+<div class="tabs">
+  <div class="tab active" data-tab="home"><span class="ti">🏠</span>Inicio</div>
+  <div class="tab" data-tab="calendar"><span class="ti">📅</span>Calendario</div>
+  <div class="tab" data-tab="weight"><span class="ti">⚖️</span>Peso</div>
+  <div class="tab" data-tab="history"><span class="ti">📊</span>Historial</div>
+</div>
+
+<!-- HOME -->
+<div class="page active" id="page-home">
+  <div id="streakBadge"></div>
+  <div class="card">
+    <div class="card-title">🎯 Metas <span id="homeYear"></span></div>
+    <div class="activity-grid" id="activityGrid"></div>
+  </div>
+</div>
+
+<!-- CALENDAR -->
+<div class="page" id="page-calendar">
+  <div class="card">
+    <div class="cal-header">
+      <button class="cal-nav" id="calPrev">◀</button>
+      <h2 class="cal-month-title" id="calTitle"></h2>
+      <button class="cal-nav" id="calNext">▶</button>
+    </div>
+    <div class="cal-grid" id="calGrid"></div>
+  </div>
+</div>
+
+<!-- WEIGHT -->
+<div class="page" id="page-weight">
+  <div class="card">
+    <div class="card-title">⚖️ Evolución de peso — Historial completo</div>
+    <div class="weight-legend">
+      <div class="wleg-item"><div class="wleg-dot" style="background:#2ecc71"></div>Óptimo (&lt;71 kg)</div>
+      <div class="wleg-item"><div class="wleg-dot" style="background:#1a7a3f"></div>Normal (72–77 kg)</div>
+      <div class="wleg-item"><div class="wleg-dot" style="background:#f39c12"></div>Atención (78 kg+)</div>
+      <div class="wleg-item"><div class="wleg-dot" style="background:#e74c3c"></div>Alerta (&gt;78 kg)</div>
+    </div>
+    <div class="weight-chart-wrap">
+      <canvas id="weightChart" height="240"></canvas>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">📋 Todos los registros</div>
+    <div id="weightList"></div>
+  </div>
+</div>
+
+<!-- HISTORY -->
+<div class="page" id="page-history">
+  <div class="card">
+    <div class="card-title">📊 Comparativa anual</div>
+    <div class="swipe-nav">
+      <button class="swipe-arrow" id="hYearPrev">◀</button>
+      <span class="swipe-label" id="hYearLabel"></span>
+      <button class="swipe-arrow" id="hYearNext">▶</button>
+    </div>
+    <div id="historyContent"></div>
+  </div>
+</div>
+
+<!-- FAB -->
+<button class="log-fab" id="fabBtn">＋</button>
+
+<!-- LOG MODAL -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <button class="modal-close-btn" id="modalClose">✕</button>
+    <h2 class="modal-title">✏️ Registrar día</h2>
+    <div class="modal-date" id="modalDate"></div>
+    <div class="activity-btn-grid" id="modalActGrid"></div>
+    <div class="weight-row">
+      <input type="number" step="0.1" class="weight-input" id="weightInputModal" placeholder="Ej: 74.5">
+      <span class="weight-label">⚖️ kg (opcional)</span>
+    </div>
+    <button class="modal-save" id="modalSave">Guardar 💾</button>
+  </div>
+</div>
+
+<!-- YEAR MODAL -->
+<div class="modal-overlay" id="yearModal">
+  <div class="modal">
+    <button class="modal-close-btn" id="yearModalClose">✕</button>
+    <h2 class="modal-title">🗓️ Cambiar año</h2>
+    <div id="yearBtnList" style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const ACTIVITIES = [
+  { id:'workout',      name:'Workout',    icon:'🏋️' },
+  { id:'running',      name:'Running',    icon:'🏃' },
+  { id:'bici',         name:'Bici',       icon:'🚴' },
+  { id:'lectura',      name:'Lectura',    icon:'📚' },
+  { id:'meditacion',   name:'Meditación', icon:'🧘' },
+  { id:'yoga',         name:'Yoga',       icon:'🌀' },
+  { id:'kegel',        name:'Kegel',      icon:'🩲' },
+  { id:'flexibilidad', name:'Flexibil.',  icon:'🤸' },
+  { id:'basket',       name:'Basket',     icon:'🏀' },
+  { id:'skate',        name:'Skate',      icon:'🛹' },
+];
+
+const GOALS = {
+  2026:{ workout:100,running:30,bici:20,lectura:30,meditacion:50,yoga:15,kegel:50,flexibilidad:30,basket:15,skate:10 },
+  2025:{ workout:100,running:30,kegel:100,lectura:30 },
+  2024:{ workout:150,running:50,kegel:50 },
+};
+const HIST = {
+  2024:{ workout:110,running:14,kegel:29 },
+  2025:{ workout:50,running:15,kegel:50,lectura:20 },
+};
+const WEIGHT_INIT = [
+  {date:'2024-01-10',kg:74},{date:'2024-02-05',kg:71},{date:'2024-02-28',kg:71.5},
+  {date:'2024-03-15',kg:70.8},{date:'2024-04-13',kg:69.7},{date:'2024-09-02',kg:77},
+  {date:'2024-10-10',kg:78},{date:'2024-12-15',kg:76},{date:'2024-12-20',kg:76},
+  {date:'2025-03-20',kg:74.5},{date:'2025-11-28',kg:82},{date:'2026-01-03',kg:78},
+];
+
+const KD='mytracker_days', KW='mytracker_weight';
+const loadDays=()=>{ try{return JSON.parse(localStorage.getItem(KD))||{}}catch{return{}} };
+const saveDays=d=>localStorage.setItem(KD,JSON.stringify(d));
+const loadWeights=()=>{
+  const s=localStorage.getItem(KW);
+  if(s){try{return JSON.parse(s)}catch{}}
+  localStorage.setItem(KW,JSON.stringify(WEIGHT_INIT));
+  return WEIGHT_INIT;
+};
+const saveWeights=w=>localStorage.setItem(KW,JSON.stringify(w));
+
+let days=loadDays(), weights=loadWeights();
+let activeYear=2026, calYear=2026, calMonth=new Date().getMonth();
+let hYear=2026, modalDate=null;
+
+const pad=n=>String(n).padStart(2,'0');
+const dateStr=(y,m,d)=>`${y}-${pad(m+1)}-${pad(d)}`;
+const todayStr=()=>{const n=new Date();return dateStr(n.getFullYear(),n.getMonth(),n.getDate());};
+const MONTHS_ES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const MONTHS_SHORT=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+
+function countYear(actId,year){
+  if(year>=2026) return Object.entries(days).filter(([k,v])=>k.startsWith(year+'-')&&v.includes(actId)).length;
+  return (HIST[year]&&HIST[year][actId])||0;
+}
+
+function getZoneColor(kg){
+  if(kg<71)  return '#2ecc71';
+  if(kg<=77) return '#1a7a3f';
+  if(kg<=78) return '#f39c12';
+  return '#e74c3c';
+}
+function getZoneName(kg){
+  if(kg<71)  return 'Óptimo';
+  if(kg<=77) return 'Normal';
+  if(kg<=78) return 'Atención';
+  return 'Alerta';
+}
+
+/* ── TABS ── */
+document.querySelectorAll('.tab').forEach(t=>{
+  t.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    document.getElementById('page-'+t.dataset.tab).classList.add('active');
+    if(t.dataset.tab==='calendar') renderCalendar();
+    if(t.dataset.tab==='weight')   renderWeight();
+    if(t.dataset.tab==='history')  renderHistory();
+  });
+});
+
+/* ── YEAR SWITCHER ── */
+document.getElementById('yearSwitchBtn').addEventListener('click',()=>{
+  document.getElementById('yearModal').classList.add('open');
+  const list=document.getElementById('yearBtnList');
+  list.innerHTML='';
+  [2024,2025,2026].forEach(y=>{
+    const b=document.createElement('button');
+    b.textContent=y;
+    b.style.cssText=`font-family:'Fredoka One',cursive;font-size:1.2rem;padding:12px 28px;border-radius:12px;border:2px solid ${y===activeYear?'var(--g1)':'var(--g3)'};background:${y===activeYear?'var(--g1)':'var(--g5)'};color:${y===activeYear?'white':'var(--mid)'};cursor:pointer;`;
+    b.addEventListener('click',()=>{
+      activeYear=y; calYear=y; calMonth=0;
+      document.getElementById('yearSwitchBtn').textContent=y+' ▾';
+      document.getElementById('yearModal').classList.remove('open');
+      renderHome();
+    });
+    list.appendChild(b);
+  });
+});
+document.getElementById('yearModalClose').addEventListener('click',()=>document.getElementById('yearModal').classList.remove('open'));
+
+/* ── HOME ── */
+function renderHome(){
+  document.getElementById('homeYear').textContent=activeYear;
+  const goals=GOALS[activeYear]||{};
+  const grid=document.getElementById('activityGrid');
+  grid.innerHTML='';
+  ACTIVITIES.filter(a=>goals[a.id]).forEach(a=>{
+    const goal=goals[a.id], done=countYear(a.id,activeYear);
+    const pct=Math.min(100,Math.round(done/goal*100));
+    const d=document.createElement('div');
+    d.className='act-card';
+    d.innerHTML=`<div class="act-icon">${a.icon}</div>
+      <div class="act-name">${a.name}</div>
+      <div class="act-count">${done}</div>
+      <div class="act-goal">meta: ${goal} días</div>
+      <div class="act-bar-wrap"><div class="act-bar" style="width:${pct}%"></div></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px">
+        <span style="font-size:.7rem;color:var(--gray);font-weight:700;">${done} de ${goal}</span>
+        <span style="font-size:.75rem;font-weight:900;color:var(--g1)">${pct}%</span>
+      </div>`;
+    grid.appendChild(d);
+  });
+  // streak
+  let streak=0;
+  const dd=new Date();
+  while(true){
+    const s=dateStr(dd.getFullYear(),dd.getMonth(),dd.getDate());
+    if((days[s]||[]).length>0){streak++;dd.setDate(dd.getDate()-1);}else break;
+  }
+  document.getElementById('streakBadge').innerHTML=streak>0?`<div class="streak-badge">🔥 ${streak} día${streak>1?'s':''} de racha</div>`:'';
+}
+
+/* ── CALENDAR ── */
+function renderCalendar(){
+  document.getElementById('calTitle').textContent=`${MONTHS_ES[calMonth]} ${calYear}`;
+  const grid=document.getElementById('calGrid');
+  grid.innerHTML='';
+  ['L','M','X','J','V','S','D'].forEach(d=>{
+    const c=document.createElement('div');
+    c.className='cal-day-name';c.textContent=d;grid.appendChild(c);
+  });
+  const firstDay=new Date(calYear,calMonth,1).getDay();
+  const offset=(firstDay+6)%7;
+  const dim=new Date(calYear,calMonth+1,0).getDate();
+  const ts=todayStr();
+  for(let i=0;i<offset;i++){const c=document.createElement('div');c.className='cal-day empty';grid.appendChild(c);}
+  for(let d=1;d<=dim;d++){
+    const s=dateStr(calYear,calMonth,d);
+    const acts=days[s]||[];
+    const wEntry=weights.find(w=>w.date===s);
+    const c=document.createElement('div');
+    c.className='cal-day';
+    if(acts.length>0)c.classList.add('has-data');
+    if(s===ts)c.classList.add('today');
+    let iconsHtml='';
+    acts.forEach(a=>{
+      const act=ACTIVITIES.find(x=>x.id===a);
+      if(act)iconsHtml+=`<span title="${act.name}">${act.icon}</span>`;
+    });
+    c.innerHTML=`<div class="day-num">${d}</div>
+      <div class="day-icons">${iconsHtml}</div>
+      ${wEntry?`<div class="day-wlbl">${wEntry.kg}kg</div>`:''}`;
+    c.addEventListener('click',()=>openModal(s));
+    grid.appendChild(c);
+  }
+}
+
+document.getElementById('calPrev').addEventListener('click',()=>{calMonth--;if(calMonth<0){calMonth=11;calYear--;}renderCalendar();});
+document.getElementById('calNext').addEventListener('click',()=>{calMonth++;if(calMonth>11){calMonth=0;calYear++;}renderCalendar();});
+
+/* ── WEIGHT — full history, coloured segments ── */
+let weightChart=null;
+
+function renderWeight(){
+  const sorted=[...weights].sort((a,b)=>a.date.localeCompare(b.date));
+  const labels=sorted.map(w=>{const[y,m,d]=w.date.split('-');return`${d}/${m}/${y.slice(2)}`;});
+  const data=sorted.map(w=>w.kg);
+
+  const ctx=document.getElementById('weightChart').getContext('2d');
+  if(weightChart)weightChart.destroy();
+
+  const minW=data.length?Math.min(...data)-3:60;
+  const maxW=data.length?Math.max(...data)+3:90;
+
+  // Plugin to draw coloured line segments
+  const colorLinePlugin={
+    id:'colorLine',
+    afterDatasetsDraw(chart){
+      const{ctx:c,scales:{x,y}}=chart;
+      const meta=chart.getDatasetMeta(0);
+      if(!meta.data.length)return;
+      c.save();
+      for(let i=0;i<meta.data.length-1;i++){
+        const p1=meta.data[i],p2=meta.data[i+1];
+        const avg=(data[i]+data[i+1])/2;
+        c.beginPath();c.moveTo(p1.x,p1.y);c.lineTo(p2.x,p2.y);
+        c.strokeStyle=getZoneColor(avg);c.lineWidth=3;c.stroke();
+      }
+      c.restore();
+    }
+  };
+
+  weightChart=new Chart(ctx,{
+    type:'line',
+    plugins:[colorLinePlugin],
+    data:{
+      labels,
+      datasets:[
+        {
+          label:'Peso',data,
+          borderColor:'transparent',
+          backgroundColor:(ctx2)=>{
+            const g=ctx2.chart.ctx.createLinearGradient(0,0,0,280);
+            g.addColorStop(0,'rgba(46,204,113,0.2)');
+            g.addColorStop(1,'rgba(46,204,113,0)');
+            return g;
+          },
+          pointBackgroundColor:data.map(getZoneColor),
+          pointBorderColor:'white',pointBorderWidth:2,
+          pointRadius:6,pointHoverRadius:9,
+          fill:true,tension:0.35,borderWidth:3,
+        },
+        // Reference lines
+        {label:'Óptimo (71)',data:Array(labels.length).fill(71),borderColor:'#2ecc71',borderWidth:1.5,borderDash:[5,4],pointRadius:0,fill:false},
+        {label:'Normal máx (77)',data:Array(labels.length).fill(77),borderColor:'#1a7a3f',borderWidth:1.5,borderDash:[5,4],pointRadius:0,fill:false},
+        {label:'Alerta (78)',data:Array(labels.length).fill(78),borderColor:'#e74c3c',borderWidth:1.5,borderDash:[5,4],pointRadius:0,fill:false},
+      ]
+    },
+    options:{
+      responsive:true,
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          callbacks:{
+            label:c=>{
+              if(c.datasetIndex!==0)return null;
+              const kg=c.parsed.y;
+              return`${kg} kg — ${getZoneName(kg)}`;
+            }
+          }
+        }
+      },
+      scales:{
+        y:{min:minW,max:maxW,ticks:{callback:v=>v+'kg'},grid:{color:'rgba(0,0,0,0.05)'}},
+        x:{ticks:{font:{size:9},maxRotation:45},grid:{display:false}}
+      }
+    }
+  });
+
+  // List
+  const list=document.getElementById('weightList');
+  if(!sorted.length){list.innerHTML='<div class="empty-state"><div class="es-icon">⚖️</div>Sin registros</div>';return;}
+  list.innerHTML=[...sorted].reverse().map(w=>{
+    const[y,m,d]=w.date.split('-');
+    const col=getZoneColor(w.kg),zone=getZoneName(w.kg);
+    return`<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 4px;border-bottom:1px solid var(--g4)">
+      <span style="font-weight:700;color:var(--gray)">${d} ${MONTHS_SHORT[parseInt(m)-1]} ${y}</span>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:.72rem;font-weight:800;background:${col};color:white;padding:2px 8px;border-radius:99px">${zone}</span>
+        <span style="font-family:'Fredoka One',cursive;font-size:1.3rem;color:${col}">${w.kg} kg</span>
+      </div></div>`;
+  }).join('');
+}
+
+/* ── HISTORY ── */
+function renderHistory(){
+  document.getElementById('hYearLabel').textContent=hYear;
+  const goals=GOALS[hYear]||{};
+  const div=document.getElementById('historyContent');
+  const acts=ACTIVITIES.filter(a=>goals[a.id]);
+  if(!acts.length){div.innerHTML='<div class="empty-state"><div class="es-icon">📊</div>Sin metas para este año</div>';return;}
+  div.innerHTML=acts.map(a=>{
+    const goal=goals[a.id],done=countYear(a.id,hYear);
+    const pct=Math.min(100,Math.round(done/goal*100));
+    const col=pct>=100?'#2ecc71':pct>=60?'#1a7a3f':pct>=30?'#f39c12':'#e74c3c';
+    return`<div class="hist-row">
+      <div class="hist-label">${a.icon} ${a.name}</div>
+      <div class="hist-bar-wrap"><div class="hist-bar" style="width:${pct}%;background:${col}"></div></div>
+      <div class="hist-val" style="display:flex;flex-direction:column;align-items:flex-end;gap:1px">
+        <span>${done}/${goal}</span>
+        <span style="font-size:.7rem;color:${col};font-weight:900">${pct}%</span>
+      </div></div>`;
+  }).join('');
+}
+document.getElementById('hYearPrev').addEventListener('click',()=>{hYear--;renderHistory();});
+document.getElementById('hYearNext').addEventListener('click',()=>{hYear++;renderHistory();});
+
+/* ── MODAL ── */
+function openModal(dateOverride){
+  const s=dateOverride||todayStr();
+  modalDate=s;
+  const[y,m,d]=s.split('-');
+  document.getElementById('modalDate').textContent=`📅 ${d} de ${MONTHS_ES[parseInt(m)-1]} de ${y}`;
+  const existingActs=days[s]||[];
+  const existingW=weights.find(w=>w.date===s);
+  document.getElementById('weightInputModal').value=existingW?existingW.kg:'';
+  const grid=document.getElementById('modalActGrid');
+  grid.innerHTML='';
+  ACTIVITIES.forEach(a=>{
+    const btn=document.createElement('button');
+    btn.className='act-btn'+(existingActs.includes(a.id)?' selected':'');
+    btn.dataset.id=a.id;
+    btn.innerHTML=`<span class="abi">${a.icon}</span>${a.name}`;
+    btn.addEventListener('click',()=>btn.classList.toggle('selected'));
+    grid.appendChild(btn);
+  });
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+document.getElementById('fabBtn').addEventListener('click',()=>openModal());
+document.getElementById('modalClose').addEventListener('click',()=>document.getElementById('modalOverlay').classList.remove('open'));
+document.getElementById('modalOverlay').addEventListener('click',e=>{if(e.target===document.getElementById('modalOverlay'))document.getElementById('modalOverlay').classList.remove('open');});
+
+document.getElementById('modalSave').addEventListener('click',()=>{
+  const selected=[...document.querySelectorAll('.act-btn.selected')].map(b=>b.dataset.id);
+  if(selected.length>0)days[modalDate]=selected; else delete days[modalDate];
+  saveDays(days);
+  const kgVal=parseFloat(document.getElementById('weightInputModal').value);
+  if(!isNaN(kgVal)&&kgVal>0){
+    weights=weights.filter(w=>w.date!==modalDate);
+    weights.push({date:modalDate,kg:kgVal});
+    saveWeights(weights);
+  }
+  document.getElementById('modalOverlay').classList.remove('open');
+  renderHome();
+  if(document.getElementById('page-calendar').classList.contains('active'))renderCalendar();
+  if(document.getElementById('page-weight').classList.contains('active'))renderWeight();
+});
+
+/* ── INIT ── */
+renderHome();
+renderCalendar();
+</script>
+</body>
+</html>
