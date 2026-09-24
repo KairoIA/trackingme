@@ -17,3 +17,5 @@ Solo en el `localStorage` del dispositivo:
 - `mytracker_lastbackup`: fecha de la última copia.
 
 Objetivos (`GOALS`), históricos anteriores a 2026 (`HIST`) y actividades (`ACTIVITIES`) están al principio del `<script>` de `index.html`. Un año sin objetivos propios usa los del último año que los tiene.
+
+**Kegel y Cinta son actividades distintas.** Kegel existe en 2024-2025 (objetivos e históricos) y ya no se apunta (`retired`). En 2026 no hay Kegel: los días de 2026 marcados `kegel` pierden esa marca al abrir la app, y las fechas afectadas se guardan en `mytracker_kegel2026_removed`.

@@ -113,6 +113,17 @@
   .act-pct-row { display:flex; justify-content:space-between; align-items:center; margin-top:6px; font-size:.73rem; font-weight:700; color:var(--muted); }
   .act-pct-row b { font-size:.82rem; font-weight:900; color:var(--g1); }
 
+  .legend-card .card-title { margin-bottom:12px; }
+  .legend-list { list-style:none; display:flex; flex-direction:column; gap:12px; }
+  .legend-list li { display:grid; grid-template-columns:60px 1fr; gap:10px; align-items:start; }
+  .legend-list .streak-pill { justify-self:start; margin-top:1px; }
+  .legend-list p { font-size:.84rem; font-weight:600; line-height:1.4; color:var(--muted); }
+  .legend-list p b { font-weight:800; color:var(--ink2); }
+  .legend-bar { position:relative; display:block; width:50px; height:8px; margin-top:6px; border-radius:99px; background:var(--g4); }
+  .legend-bar span { display:block; width:62%; height:100%; border-radius:99px; background:linear-gradient(90deg,var(--g1),var(--g2)); }
+  .legend-bar i { position:absolute; top:-3px; bottom:-3px; left:45%; width:2px; margin-left:-1px; border-radius:2px; background:var(--ink2); opacity:.5; }
+  .legend-foot { margin-top:12px; font-size:.76rem; font-weight:700; color:var(--muted); }
+
   .fab {
     position:fixed; right:16px; bottom:calc(var(--sb) + 18px); z-index:30;
     display:inline-flex; align-items:center; gap:8px; height:54px; padding:0 22px; border-radius:99px;
@@ -325,6 +336,20 @@
       </div>
       <div class="activity-grid" id="activityGrid"></div>
     </div>
+    <div class="card legend-card">
+      <h2 class="card-title">ℹ️ Cómo leer las rachas</h2>
+      <ul class="legend-list">
+        <li><span class="streak-pill fire">🔥 5</span>
+          <p><b>Días seguidos</b> haciendo esa actividad. Si hoy aún no la has apuntado, cuenta hasta ayer.</p></li>
+        <li><span class="streak-pill trophy">🏆 8</span>
+          <p><b>Semanas seguidas</b> (de lunes a domingo) con al menos 1 día de esa actividad.</p></li>
+        <li><span class="streak-pill bomb">💣 3</span>
+          <p><b>Semanas seguidas</b> con 3 días o más. La semana en curso suma en cuanto llegas a 3.</p></li>
+        <li><span class="legend-bar"><span></span><i></i></span>
+          <p><b>La rayita de la barra</b> marca dónde deberías ir hoy para cumplir el objetivo a final de año. Si la barra verde la pasa, vas adelantado.</p></li>
+      </ul>
+      <p class="legend-foot">Las rachas aparecen a partir de 2.</p>
+    </div>
   </section>
 
   <!-- PAGE 1: CALENDAR -->
@@ -430,18 +455,19 @@ const ACTIVITIES = [
   { id:'meditacion',   name:'Meditación', icon:'🧘' },
   { id:'yoga',         name:'Yoga',       icon:'🌀' },
   { id:'cinta',        name:'Cinta',      icon:'👟' },
+  { id:'kegel',        name:'Kegel',      icon:'🩲', retired:true }, // solo 2024-2025: ya no se apunta (Cinta es otra cosa)
   { id:'flexibilidad', name:'Flexibil.',  icon:'🤸' },
   { id:'basket',       name:'Basket',     icon:'🏀' },
   { id:'skate',        name:'Skate',      icon:'🛹' },
 ];
 const GOALS = {
   2026:{ workout:100,running:30,bici:20,lectura:30,meditacion:50,yoga:15,cinta:50,flexibilidad:30,basket:15,skate:10 },
-  2025:{ workout:100,running:30,cinta:100,lectura:30 },
-  2024:{ workout:150,running:50,cinta:50 },
+  2025:{ workout:100,running:30,kegel:100,lectura:30 },
+  2024:{ workout:150,running:50,kegel:50 },
 };
 const HIST = {
-  2024:{ workout:110,running:14,cinta:29 },
-  2025:{ workout:50,running:15,cinta:50,lectura:20 },
+  2024:{ workout:110,running:14,kegel:29 },
+  2025:{ workout:50,running:15,kegel:50,lectura:20 },
 };
 const WEIGHT_INIT = [
   {date:'2024-01-10',kg:74},{date:'2024-02-05',kg:71},{date:'2024-02-28',kg:71.5},
@@ -501,6 +527,7 @@ const signed = n => { const r = Math.round(n * 10) / 10; return (r > 0 ? '+' : r
 const shortDate = s => { const [y, m, d] = s.split('-'); return `${+d} ${MONTHS_SHORT[+m - 1]} ${y}`; };
 const actsOf = s => Array.isArray(days[s]) ? days[s] : [];
 const actById = id => ACTIVITIES.find(a => a.id === id);
+const LOGGABLE = ACTIVITIES.filter(a => !a.retired); // las que salen al apuntar un día
 const parseKg = v => {
   const n = Number(String(v).trim().replace(',', '.'));
   return Number.isFinite(n) && n > 0 && n < 400 ? Math.round(n * 100) / 100 : null;
@@ -510,6 +537,25 @@ const weightRows = () => weights
   .filter(w => w && /^\d{4}-\d{2}-\d{2}$/.test(w.date) && Number(w.kg) > 0)
   .map(w => ({ date: w.date, kg: Number(w.kg) }))
   .sort((a, b) => a.date.localeCompare(b.date));
+
+// 2026: Kegel y Cinta son cosas distintas y en 2026 no hay Kegel. Los días de 2026 marcados «kegel»
+// (antes del 2-abr) pierden esa marca, a petición de Javi. Las fechas quitadas se guardan en KK por si acaso.
+const KK = 'mytracker_kegel2026_removed';
+(() => {
+  const removed = [];
+  for (const [k, v] of Object.entries(days)) {
+    if (!k.startsWith('2026-') || !Array.isArray(v) || !v.includes('kegel')) continue;
+    removed.push(k);
+    const rest = v.filter(id => id !== 'kegel');
+    if (rest.length) days[k] = rest; else delete days[k];
+  }
+  if (!removed.length) return;
+  try {
+    const before = JSON.parse(localStorage.getItem(KK) || '[]');
+    localStorage.setItem(KK, JSON.stringify([...new Set([...before, ...removed])].sort()));
+  } catch { /* sin copia: se sigue igual */ }
+  persist(KD, days);
+})();
 
 // Años: desde el primero con objetivos hasta el actual
 const GOAL_YEARS = Object.keys(GOALS).map(Number).sort((a, b) => a - b);
@@ -599,7 +645,7 @@ function renderHome() {
   const pace = isCurrent ? dayN / yearLen : null;
   $('homeMeta').innerHTML = [
     GOALS[y] ? '' : `Goals from ${LAST_GOAL_YEAR}`,
-    isCurrent ? `Day ${dayN}/${yearLen} · ▏= pace` : '',
+    isCurrent ? `Day ${dayN}/${yearLen}` : '',
   ].filter(Boolean).join('<br>');
 
   const acts = ACTIVITIES.filter(a => goals[a.id]);
@@ -911,8 +957,8 @@ function openModal(dateOverride) {
   const d = parseISO(s);
   $('modalDate').textContent = `📅 ${DAYS_ES[d.getDay()]}, ${d.getDate()} de ${MONTHS_ES[d.getMonth()]} de ${d.getFullYear()}`;
   const current = actsOf(s);
-  modalLegacy = current.filter(id => !actById(id)); // actividades antiguas (p. ej. «kegel»): se conservan al guardar
-  $('modalActGrid').innerHTML = ACTIVITIES.map(a => {
+  modalLegacy = current.filter(id => !LOGGABLE.some(a => a.id === id)); // ids que ya no se apuntan: se conservan al guardar
+  $('modalActGrid').innerHTML = LOGGABLE.map(a => {
     const on = current.includes(a.id);
     return `<button class="act-btn${on ? ' selected' : ''}" data-id="${a.id}" aria-pressed="${on}"><span class="abi">${a.icon}</span>${a.name}</button>`;
   }).join('');
