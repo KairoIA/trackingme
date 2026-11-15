@@ -505,8 +505,58 @@ function loadWeights() {
   return WEIGHT_INIT.map(w => ({ ...w }));
 }
 function persist(key, value) {
-  try { localStorage.setItem(key, JSON.stringify(value)); return true; }
+  try { localStorage.setItem(key, JSON.stringify(value)); syncSoon(); return true; }
   catch { toast('⚠️ Could not save on this device'); return false; }
+}
+
+// ── SYNC CON LA OFICINA (15-nov-2026, opcional) ──────
+// Si este móvil está conectado (enlace que manda Kaira, una sola vez), cada vez que se guarda algo se envían los
+// últimos 120 días a la oficina para que el parte de la mañana vea la actividad. Solo ENVÍA: no lee nada de vuelta
+// y no cambia los datos de aquí. Sin conexión, la app funciona igual que siempre.
+const KS = 'mytracker_sync';
+function syncCfg() {
+  try {
+    const s = JSON.parse(localStorage.getItem(KS));
+    return s && /^https:\/\/[a-z0-9]+\.supabase\.co$/.test(s.u) && s.k && s.c ? s : null;
+  } catch { return null; }
+}
+let syncTimer = null, syncPending = false;
+function syncSoon() {
+  if (!syncCfg()) return;
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(syncNow, 1500);
+}
+async function syncNow() {
+  const c = syncCfg();
+  if (!c || syncPending) return;
+  syncPending = true;
+  const from = isoOf(new Date(Date.now() - 119 * 864e5));
+  const nameOf = id => (ACTIVITIES.find(a => a.id === id) || {}).name || String(id);
+  const d = {};
+  for (const [f, list] of Object.entries(days)) if (f >= from && Array.isArray(list)) d[f] = list.map(nameOf).slice(0, 20);
+  const w = weights.filter(x => x && x.date >= from && typeof x.kg === 'number').map(x => ({ fecha: x.date, kg: x.kg }));
+  try {
+    const r = await fetch(`${c.u}/rest/v1/rpc/trackingme_guardar`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: c.k, Authorization: `Bearer ${c.k}` },
+      body: JSON.stringify({ p_clave: c.c, p_dias: d, p_pesos: w }),
+    });
+    if (!r.ok) console.warn('Sync oficina:', r.status);
+  } catch { /* sin red: se envía en el próximo guardado */ }
+  syncPending = false;
+}
+// El enlace de Kaira trae la conexión en «#enlace=…» (detrás de la #: no llega a ningún servidor). Se guarda y se borra
+// de la dirección.
+function readLink() {
+  const m = location.hash.match(/enlace=([A-Za-z0-9_-]+)/);
+  if (!m) return false;
+  history.replaceState(null, '', location.pathname + location.search);
+  try {
+    const j = JSON.parse(atob(m[1].replace(/-/g, '+').replace(/_/g, '/')));
+    if (!/^https:\/\/[a-z0-9]+\.supabase\.co$/.test(j.u) || !j.k || !j.c) return false;
+    localStorage.setItem(KS, JSON.stringify({ u: j.u, k: j.k, c: j.c }));
+    return true;
+  } catch { return false; }
 }
 
 let days = loadDays(), weights = loadWeights();
@@ -1057,6 +1107,9 @@ addEventListener('resize', () => {
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') renderAll(); });
 
 renderAll();
+if (readLink()) { toast('Conectado con la oficina ✓'); syncNow(); } else syncSoon();
+// Por si la app ya estaba abierta al pulsar el enlace (solo cambia lo de detrás de la #)
+addEventListener('hashchange', () => { if (readLink()) { toast('Conectado con la oficina ✓'); syncNow(); } });
 })();
 </script>
 </body>
